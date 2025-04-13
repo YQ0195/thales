@@ -1,21 +1,24 @@
 package com.example.thales.ui
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
 import com.example.thales.viewmodel.ProductViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ProductListScreen(
-    modifier: Modifier = Modifier,
-    viewModel: ProductViewModel = viewModel()
+    viewModel: ProductViewModel,
+    onProductClick: (Int) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val products by viewModel.products.collectAsStateWithLifecycle()
     val isLoading by viewModel.loading.collectAsStateWithLifecycle()
@@ -29,25 +32,44 @@ fun ProductListScreen(
             CircularProgressIndicator()
         }
     } else {
-        LazyColumn(
-            modifier = modifier,
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
+            modifier = modifier
+                .fillMaxSize(),
+            contentPadding = PaddingValues(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(items = products, key = { it.id }) { product ->
+            items(products, key = { it.id }) { product ->
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onProductClick(product.id) },
                     elevation = CardDefaults.cardElevation()
                 ) {
-                    Column(Modifier.padding(16.dp)) {
-                        Text(product.name, style = MaterialTheme.typography.titleMedium)
-                        Text("Type: ${product.type}")
-                        Text("Price: $${product.price}")
-                        Text(product.description)
+                    Column {
+                        AsyncImage(
+                            model = product.picture_url,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(120.dp)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = product.name,
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(horizontal = 8.dp)
+                        )
+                        Text(
+                            text = "$${product.price}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(horizontal = 8.dp)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
                     }
                 }
             }
         }
     }
 }
-
