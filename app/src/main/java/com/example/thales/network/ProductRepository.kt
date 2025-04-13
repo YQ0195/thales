@@ -1,6 +1,8 @@
 package com.example.thales.network
 
 import com.example.thales.model.Product
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 
 object ProductRepository {
 
@@ -23,4 +25,14 @@ object ProductRepository {
     suspend fun deleteProduct(id: Int) {
         return RetrofitClient.api.deleteProduct(id)
     }
+    suspend fun createProductMultipart(
+        name: RequestBody,
+        type: RequestBody,
+        price: RequestBody,
+        description: RequestBody,
+        image: MultipartBody.Part
+    ) {
+        RetrofitClient.api.createProduct(name, type, price, description, image)
+    }
+
 }

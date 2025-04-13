@@ -1,7 +1,6 @@
 // ProductDetailScreen.kt
 package com.example.thales.ui
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -16,7 +15,7 @@ import com.example.thales.model.Product
 fun ProductDetailScreen(product: Product) {
     Column(modifier = Modifier.padding(16.dp)) {
         AsyncImage(
-            model = product.picture_url,
+            model = "http://10.0.2.2:8080" + product.picture_url,
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier

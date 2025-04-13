@@ -7,6 +7,8 @@ import com.example.thales.network.ProductRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 
 class ProductViewModel : ViewModel() {
 
@@ -29,4 +31,22 @@ class ProductViewModel : ViewModel() {
             }
         }
     }
+
+    fun createProductMultipart(
+        name: RequestBody,
+        type: RequestBody,
+        price: RequestBody,
+        description: RequestBody,
+        image: MultipartBody.Part
+    ) {
+        viewModelScope.launch {
+            try {
+                ProductRepository.createProductMultipart(name, type, price, description, image)
+                fetchProducts() // Optional: refresh product list
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
 }

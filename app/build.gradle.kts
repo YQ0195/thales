@@ -55,6 +55,7 @@ dependencies {
     implementation(libs.androidx.foundation)
     implementation(libs.coil.compose)
     implementation(libs.androidx.navigation.compose)
+    implementation("androidx.compose.material:material-icons-extended")
 
     implementation(libs.retrofit)
     implementation(libs.converter.gson)

@@ -17,6 +17,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.thales.ui.ProductCreationForm
 import com.example.thales.ui.ProductDetailScreen
 import com.example.thales.ui.ProductListScreen
 import com.example.thales.ui.theme.ThalesTheme
@@ -45,10 +46,20 @@ class MainActivity : ComponentActivity() {
                     ) {
                         composable("productList") {
                             ProductListScreen(
+                                viewModel = viewModel,
                                 onProductClick = { productId ->
                                     navController.navigate("productDetail/$productId")
                                 },
-                                viewModel = viewModel // ✅ Pass explicitly
+                                onCreateClick = {
+                                    navController.navigate("createProduct")
+                                }
+                            )
+                        }
+
+                        composable("createProduct") {
+                            ProductCreationForm(
+                                viewModel = viewModel,
+                                onProductCreated = { navController.popBackStack() }
                             )
                         }
 
