@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.example.thales.model.Product
 import com.example.thales.util.rememberImagePickerHandler
 import com.example.thales.viewmodel.ProductViewModel
 import kotlinx.coroutines.launch
@@ -24,19 +25,22 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
+import java.io.File
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductCreationForm(
     viewModel: ProductViewModel,
-    onProductCreated: () -> Unit
+    onProductCreated: () -> Unit,
+    productToEdit: Product? = null // nullable for create/edit mode
 ) {
     val coroutineScope = rememberCoroutineScope()
     val picker = rememberImagePickerHandler()
 
-    var name by remember { mutableStateOf("") }
-    var type by remember { mutableStateOf("") }
-    var price by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
+    var name by remember { mutableStateOf(productToEdit?.name ?: "") }
+    var type by remember { mutableStateOf(productToEdit?.type ?: "") }
+    var price by remember { mutableStateOf(productToEdit?.price?.toString() ?: "") }
+    var description by remember { mutableStateOf(productToEdit?.description ?: "") }
 
     var nameError by remember { mutableStateOf(false) }
     var typeError by remember { mutableStateOf(false) }
@@ -53,49 +57,6 @@ fun ProductCreationForm(
         picker.onCameraResult(it)
     }
 
-    if (showImagePickerDialog) {
-        AlertDialog(
-            onDismissRequest = { showImagePickerDialog = false },
-            confirmButton = {},
-            title = {
-                Text("Select Image", style = MaterialTheme.typography.titleMedium)
-            },
-            text = {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    Button(
-                        onClick = {
-                            showImagePickerDialog = false
-                            galleryLauncher.launch("image/*")
-                        },
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Icon(Icons.Default.Image, contentDescription = null)
-                        Spacer(Modifier.width(8.dp))
-                        Text("Gallery")
-                    }
-
-                    Button(
-                        onClick = {
-                            showImagePickerDialog = false
-                            val uri = picker.createCameraUri()
-                            cameraLauncher.launch(uri)
-                        },
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Icon(Icons.Default.CameraAlt, contentDescription = null)
-                        Spacer(Modifier.width(8.dp))
-                        Text("Camera")
-                    }
-                }
-            },
-            shape = RoundedCornerShape(16.dp),
-            containerColor = MaterialTheme.colorScheme.surface
-        )
-    }
-
     Column(
         modifier = Modifier
             .padding(16.dp)
@@ -110,19 +71,60 @@ fun ProductCreationForm(
                 .clickable { showImagePickerDialog = true },
             contentAlignment = Alignment.Center
         ) {
-            if (picker.imageUri == null) {
+            if (picker.imageUri == null && productToEdit?.picture_url == null) {
                 Text(
                     "Tap to select image",
                     color = if (imageError) Color.Red else Color.DarkGray
                 )
             } else {
                 AsyncImage(
-                    model = picker.imageUri,
+                    model = picker.imageUri ?: ("http://10.0.2.2:8080" + productToEdit?.picture_url),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
                 )
             }
+        }
+
+        if (showImagePickerDialog) {
+            AlertDialog(
+                onDismissRequest = { showImagePickerDialog = false },
+                confirmButton = {},
+                title = { Text("Select Image", style = MaterialTheme.typography.titleMedium) },
+                text = {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        Button(
+                            onClick = {
+                                showImagePickerDialog = false
+                                galleryLauncher.launch("image/*")
+                            },
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Icon(Icons.Default.Image, contentDescription = null)
+                            Spacer(Modifier.width(8.dp))
+                            Text("Gallery")
+                        }
+
+                        Button(
+                            onClick = {
+                                showImagePickerDialog = false
+                                val uri = picker.createCameraUri()
+                                cameraLauncher.launch(uri)
+                            },
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Icon(Icons.Default.CameraAlt, contentDescription = null)
+                            Spacer(Modifier.width(8.dp))
+                            Text("Camera")
+                        }
+                    }
+                },
+                shape = RoundedCornerShape(16.dp),
+                containerColor = MaterialTheme.colorScheme.surface
+            )
         }
 
         OutlinedTextField(
@@ -135,16 +137,45 @@ fun ProductCreationForm(
             label = { Text("Name") },
             modifier = Modifier.fillMaxWidth()
         )
-        OutlinedTextField(
-            value = type,
-            onValueChange = {
-                type = it
-                typeError = false
-            },
-            isError = typeError,
-            label = { Text("Type") },
-            modifier = Modifier.fillMaxWidth()
-        )
+        var expanded by remember { mutableStateOf(false) }
+        val categoryOptions = listOf("Electronics", "Clothing", "Books", "Beauty", "Appliances", "Toys", "Groceries", "Sports", "Furnitures")
+
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = !expanded }
+        ) {
+            OutlinedTextField(
+                value = type,
+                onValueChange = {},
+                readOnly = true,
+                isError = typeError,
+                label = { Text("Type") },
+                trailingIcon = {
+                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                },
+                modifier = Modifier
+                    .menuAnchor()
+                    .fillMaxWidth()
+            )
+
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                categoryOptions.forEach { option ->
+                    DropdownMenuItem(
+                        text = { Text(option) },
+                        onClick = {
+                            type = option
+                            expanded = false
+                            typeError = false
+                        }
+                    )
+                }
+            }
+        }
+
+
         OutlinedTextField(
             value = price,
             onValueChange = {
@@ -168,12 +199,11 @@ fun ProductCreationForm(
 
         Button(
             onClick = {
-                // Validate fields
                 val validName = name.isNotBlank()
                 val validType = type.isNotBlank()
                 val validPrice = price.toDoubleOrNull() != null
                 val validDesc = description.isNotBlank()
-                val validImage = picker.imageUri != null
+                val validImage = picker.imageUri != null || productToEdit != null
 
                 nameError = !validName
                 typeError = !validType
@@ -183,32 +213,40 @@ fun ProductCreationForm(
 
                 if (validName && validType && validPrice && validDesc && validImage) {
                     coroutineScope.launch {
-                        val file = picker.uriToTempFile() ?: return@launch
+                        if (productToEdit != null && picker.imageUri == null) {
+                            // No image change, use existing product for update
+                            val updatedProduct = productToEdit.copy(
+                                name = name,
+                                type = type,
+                                price = price.toDouble(),
+                                description = description
+                            )
+                            viewModel.updateProduct(productToEdit.id, updatedProduct)
+                        } else {
+                            val file = picker.uriToTempFile() ?: return@launch
+                            val imagePart = MultipartBody.Part.createFormData(
+                                "image",
+                                file.name,
+                                file.asRequestBody("image/*".toMediaTypeOrNull())
+                            )
+                            val namePart = name.toRequestBody("text/plain".toMediaTypeOrNull())
+                            val typePart = type.toRequestBody("text/plain".toMediaTypeOrNull())
+                            val pricePart = price.toRequestBody("text/plain".toMediaTypeOrNull())
+                            val descPart = description.toRequestBody("text/plain".toMediaTypeOrNull())
 
-                        val imagePart = MultipartBody.Part.createFormData(
-                            "image",
-                            file.name,
-                            file.asRequestBody("image/*".toMediaTypeOrNull())
-                        )
-
-                        val namePart = name.toRequestBody("text/plain".toMediaTypeOrNull())
-                        val typePart = type.toRequestBody("text/plain".toMediaTypeOrNull())
-                        val pricePart = price.toRequestBody("text/plain".toMediaTypeOrNull())
-                        val descPart = description.toRequestBody("text/plain".toMediaTypeOrNull())
-
-                        viewModel.createProductMultipart(
-                            namePart, typePart, pricePart, descPart, imagePart
-                        )
-
+                            if (productToEdit != null) {
+                                viewModel.updateProductWithMultipartImage(
+                                    productToEdit.id,namePart, typePart, pricePart, descPart, imagePart
+                                )
+                            }
+                        }
                         onProductCreated()
                     }
                 }
             },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 8.dp)
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Create Product")
+            Text(if (productToEdit != null) "Update Product" else "Create Product")
         }
     }
 }

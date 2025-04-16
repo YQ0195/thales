@@ -30,7 +30,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             ThalesTheme {
-                val viewModel: ProductViewModel = viewModel() // ✅ Scoped once here
+                val viewModel: ProductViewModel = viewModel()
                 val navController = rememberNavController()
 
                 Scaffold(
@@ -72,7 +72,16 @@ class MainActivity : ComponentActivity() {
                             Log.d("ayo2", products.toString())
 
                             when {
-                                product != null -> ProductDetailScreen(product)
+                                product != null -> ProductDetailScreen(
+                                    product = product,
+                                    onEditClick = {
+                                        navController.navigate("editProduct/${product.id}")
+                                    },
+                                    onDeleteClick = {
+                                        viewModel.deleteProduct(product.id)
+                                        navController.popBackStack()
+                                    }
+                                )
                                 products.isEmpty() -> Box(
                                     modifier = Modifier.fillMaxSize(),
                                     contentAlignment = Alignment.Center
@@ -81,6 +90,22 @@ class MainActivity : ComponentActivity() {
                                 }
                                 else -> Text("Product not found")
                             }
+                        }
+
+                        composable("editProduct/{productId}") { backStackEntry ->
+                            val productId = backStackEntry.arguments?.getString("productId")?.toIntOrNull()
+                            val products by viewModel.products.collectAsStateWithLifecycle()
+                            val product = products.find { it.id == productId }
+
+                            product?.let {
+                                ProductCreationForm(
+                                    viewModel = viewModel,
+                                    productToEdit = it, // ✅ Pass product for prefill
+                                    onProductCreated = {
+                                        navController.popBackStack()
+                                    }
+                                )
+                            } ?: Text("Product not found")
                         }
                     }
                 }

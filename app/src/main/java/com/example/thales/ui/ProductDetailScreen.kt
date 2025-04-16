@@ -1,19 +1,64 @@
-// ProductDetailScreen.kt
 package com.example.thales.ui
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.thales.model.Product
 
 @Composable
-fun ProductDetailScreen(product: Product) {
-    Column(modifier = Modifier.padding(16.dp)) {
+fun ProductDetailScreen(
+    product: Product,
+    onEditClick: (Product) -> Unit,
+    onDeleteClick: (Product) -> Unit
+) {
+    var showMenu by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        // Header row with three-dots menu
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End
+        ) {
+            IconButton(onClick = { showMenu = true }) {
+                Icon(Icons.Default.MoreVert, contentDescription = "More")
+            }
+
+            DropdownMenu(
+                expanded = showMenu,
+                onDismissRequest = { showMenu = false }
+            ) {
+                DropdownMenuItem(
+                    text = { Text("Edit") },
+                    onClick = {
+                        showMenu = false
+                        onEditClick(product)
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text("Delete") },
+                    onClick = {
+                        showMenu = false
+                        showDeleteDialog = true
+                    }
+                )
+            }
+        }
+
+        // Image with rounded corners and shadow
         AsyncImage(
             model = "http://10.0.2.2:8080" + product.picture_url,
             contentDescription = null,
@@ -21,13 +66,64 @@ fun ProductDetailScreen(product: Product) {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(240.dp)
+                .clip(MaterialTheme.shapes.medium)
+                .shadow(4.dp)
         )
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(text = product.name, style = MaterialTheme.typography.headlineSmall)
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(text = "Type: ${product.type}", style = MaterialTheme.typography.bodyLarge)
-        Text(text = "Price: $${product.price}", style = MaterialTheme.typography.bodyLarge)
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(text = product.description, style = MaterialTheme.typography.bodyMedium)
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Product content section
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Text(
+                text = product.name,
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Text(
+                text = "Type: ${product.type}",
+                style = MaterialTheme.typography.bodyLarge
+            )
+            Text(
+                text = "Price: $${product.price}",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.secondary
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = product.description,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+    }
+
+    // Confirm deletion dialog
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDeleteDialog = false
+                    onDeleteClick(product)
+                }) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Cancel")
+                }
+            },
+            title = { Text("Delete Product") },
+            text = { Text("Are you sure you want to delete ${product.name}?") }
+        )
     }
 }

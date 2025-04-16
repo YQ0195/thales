@@ -1,5 +1,6 @@
 package com.example.thales.ui
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -15,6 +16,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.thales.viewmodel.ProductViewModel
 
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ProductListScreen(
@@ -25,6 +27,13 @@ fun ProductListScreen(
 ) {
     val products by viewModel.products.collectAsStateWithLifecycle()
     val isLoading by viewModel.loading.collectAsStateWithLifecycle()
+    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
+    val sortOrder by viewModel.sortOrder.collectAsStateWithLifecycle()
+    val currentPage by viewModel.currentPage.collectAsStateWithLifecycle()
+    val selectedType by viewModel.selectedType.collectAsStateWithLifecycle()
+
+    var typeMenuExpanded by remember { mutableStateOf(false) }
+    val categoryOptions = listOf("All", "Electronics", "Clothing", "Books", "Beauty", "Home", "Toys", "Groceries", "Sports", "Automotive")
 
     LaunchedEffect(Unit) {
         viewModel.fetchProducts()
@@ -32,59 +41,131 @@ fun ProductListScreen(
 
     Scaffold(
         floatingActionButton = {
-            FloatingActionButton(onClick = onCreateClick) {
+            FloatingActionButton(
+                onClick = onCreateClick,
+                modifier = Modifier.offset(y = (-32).dp)
+            ) {
                 Icon(Icons.Default.Add, contentDescription = "Create Product")
             }
         }
-    ) { innerPadding ->
-        if (isLoading) {
-            Box(
-                modifier = modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-                contentAlignment = Alignment.Center
+
+    ) {
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(horizontal = 12.dp)
+        ) {
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = {
+                    viewModel.setSearchQuery(it)
+                },
+                label = { Text("Search by name") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                CircularProgressIndicator()
-            }
-        } else {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                modifier = modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-                contentPadding = PaddingValues(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(products, key = { it.id }) { product ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onProductClick(product.id) },
-                        elevation = CardDefaults.cardElevation()
+                Button(onClick = { viewModel.toggleSortOrder() }) {
+                    Text("Price ${if (sortOrder == "asc") "↑" else "↓"}")
+                }
+
+                Box {
+                    Button(onClick = { typeMenuExpanded = true }) {
+                        Text(selectedType.ifBlank { "Type" })
+                    }
+                    DropdownMenu(
+                        expanded = typeMenuExpanded,
+                        onDismissRequest = { typeMenuExpanded = false }
                     ) {
-                        Column {
-                            AsyncImage(
-                                model = "http://10.0.2.2:8080" + product.picture_url,
-                                contentDescription = null,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(120.dp)
+                        categoryOptions.forEach { type ->
+                            DropdownMenuItem(
+                                text = { Text(type) },
+                                onClick = {
+                                    viewModel.setSelectedType(type)
+                                    typeMenuExpanded = false
+                                }
                             )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = product.name,
-                                style = MaterialTheme.typography.titleMedium,
-                                modifier = Modifier.padding(horizontal = 8.dp)
-                            )
-                            Text(
-                                text = "$${product.price}",
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier.padding(horizontal = 8.dp)
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
                         }
                     }
+                }
+
+                Button(onClick = { viewModel.clearFilters() }) {
+                    Text("Clear Filters")
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            if (isLoading) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            } else {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(products, key = { it.id }) { product ->
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onProductClick(product.id) },
+                            elevation = CardDefaults.cardElevation()
+                        ) {
+                            Column {
+                                AsyncImage(
+                                    model = "http://10.0.2.2:8080" + product.picture_url,
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(120.dp)
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = product.name,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    modifier = Modifier.padding(horizontal = 8.dp)
+                                )
+                                Text(
+                                    text = "$${product.price}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    modifier = Modifier.padding(horizontal = 8.dp)
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Button(
+                        onClick = { viewModel.previousPage() },
+                        enabled = currentPage > 1
+                    ) { Text("Previous") }
+
+                    Text("Page $currentPage")
+
+                    Button(
+                        onClick = { viewModel.nextPage() },
+                        enabled = products.size == 6
+                    ) { Text("Next") }
                 }
             }
         }

@@ -7,10 +7,18 @@ import retrofit2.Response
 import retrofit2.http.*
 
 interface ApiService {
-    @GET("products")
-    suspend fun getProducts(): List<Product>
 
-    @GET("products/{id}")
+    @GET("products")
+    suspend fun getProducts(
+        @Query("page") page: Int,
+        @Query("limit") limit: Int,
+        @Query("sortBy") sortBy: String,
+        @Query("sortOrder") sortOrder: String,
+        @Query("search") search: String,
+        @Query("type") type: String? = null
+    ): List<Product>
+
+    @GET("products/{id}/no-image")
     suspend fun getProduct(@Path("id") id: Int): Product
 
     @POST("products")
@@ -23,8 +31,19 @@ interface ApiService {
     suspend fun deleteProduct(@Path("id") id: Int): Unit
 
     @Multipart
-    @POST("/products")
+    @POST("products")
     suspend fun createProduct(
+        @Part("name") name: RequestBody,
+        @Part("type") type: RequestBody,
+        @Part("price") price: RequestBody,
+        @Part("description") description: RequestBody,
+        @Part image: MultipartBody.Part
+    ): Response<Unit>
+
+    @Multipart
+    @PUT("products/{id}/with-image")
+    suspend fun updateProductWithImage(
+        @Path("id") id: Int,
         @Part("name") name: RequestBody,
         @Part("type") type: RequestBody,
         @Part("price") price: RequestBody,
