@@ -122,7 +122,7 @@ fun ProductDetailScreen(
 
 
             Text(
-                text = "Price: $${product.price}",
+                text = "$${"%.2f".format(product.price)}",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.secondary
             )
@@ -133,9 +133,10 @@ fun ProductDetailScreen(
                 style = MaterialTheme.typography.bodyLarge
             )
             Text(
-                text = product.description,
+                text = product.description.replace("\\n", "\n"),
                 style = MaterialTheme.typography.bodyMedium
             )
+
         }
 
     }

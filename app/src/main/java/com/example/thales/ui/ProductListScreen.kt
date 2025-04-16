@@ -133,10 +133,11 @@ fun ProductListScreen(
                                     modifier = Modifier.padding(horizontal = 8.dp)
                                 )
                                 Text(
-                                    text = "$${product.price}",
+                                    text = "$${"%.2f".format(product.price)}",
                                     style = MaterialTheme.typography.bodyMedium,
                                     modifier = Modifier.padding(horizontal = 8.dp)
                                 )
+
                                 Spacer(modifier = Modifier.height(8.dp))
                             }
                         }

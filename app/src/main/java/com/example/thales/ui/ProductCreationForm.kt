@@ -1,5 +1,6 @@
 package com.example.thales.ui
 
+import android.annotation.SuppressLint
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -31,6 +32,7 @@ import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
 
+@SuppressLint("DefaultLocale")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductCreationForm(
@@ -45,8 +47,12 @@ fun ProductCreationForm(
 
     var name by remember { mutableStateOf(productToEdit?.name ?: "") }
     var type by remember { mutableStateOf(productToEdit?.type ?: "") }
-    var price by remember { mutableStateOf(productToEdit?.price?.toString() ?: "") }
-    var description by remember { mutableStateOf(productToEdit?.description ?: "") }
+    var price by remember {
+        mutableStateOf(
+            productToEdit?.price?.let { String.format("%.2f", it) } ?: ""
+        )
+    }
+    var description by remember { mutableStateOf(productToEdit?.description?.replace("\\n", "\n") ?: "") }
 
     var nameError by remember { mutableStateOf(false) }
     var typeError by remember { mutableStateOf(false) }
