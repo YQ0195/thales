@@ -6,7 +6,7 @@ This is the frontend Android application for the Thales application process. It 
 
 ---
 
-##Tech Stack
+## Tech Stack
 
 - **Kotlin**
 - **Jetpack Compose**
