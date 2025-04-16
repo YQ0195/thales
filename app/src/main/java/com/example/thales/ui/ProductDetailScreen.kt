@@ -2,6 +2,7 @@ package com.example.thales.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -13,11 +14,13 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.thales.model.Product
 
 @Composable
 fun ProductDetailScreen(
+    navController: NavController,
     product: Product,
     onEditClick: (Product) -> Unit,
     onDeleteClick: (Product) -> Unit
@@ -34,8 +37,22 @@ fun ProductDetailScreen(
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = { navController.popBackStack() }) {
+                    Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Product Detail",
+                    style = MaterialTheme.typography.titleLarge
+                )
+            }
+
             Box {
                 IconButton(
                     onClick = { showMenu = true },
@@ -49,8 +66,7 @@ fun ProductDetailScreen(
 
                 DropdownMenu(
                     expanded = showMenu,
-                    onDismissRequest = { showMenu = false },
-                    modifier = Modifier
+                    onDismissRequest = { showMenu = false }
                 ) {
                     DropdownMenuItem(
                         text = { Text("Edit") },
@@ -71,6 +87,7 @@ fun ProductDetailScreen(
         }
 
 
+
         // Image with rounded corners and shadow
         AsyncImage(
             model = "http://10.0.2.2:8080" + product.picture_url,
@@ -89,33 +106,39 @@ fun ProductDetailScreen(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
                 text = product.name,
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.primary
             )
-
             Spacer(modifier = Modifier.height(12.dp))
 
             Text(
                 text = "Type: ${product.type}",
                 style = MaterialTheme.typography.bodyLarge
             )
+
+
             Text(
                 text = "Price: $${product.price}",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.secondary
             )
+            Spacer(modifier = Modifier.height(24.dp))
 
-            Spacer(modifier = Modifier.height(16.dp))
-
+            Text(
+                text = "Description:",
+                style = MaterialTheme.typography.bodyLarge
+            )
             Text(
                 text = product.description,
                 style = MaterialTheme.typography.bodyMedium
             )
         }
+
     }
 
     // Confirm deletion dialog

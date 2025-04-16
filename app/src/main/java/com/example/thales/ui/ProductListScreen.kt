@@ -11,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
@@ -119,6 +120,8 @@ fun ProductListScreen(
                                 AsyncImage(
                                     model = "http://10.0.2.2:8080" + product.picture_url,
                                     contentDescription = null,
+                                    contentScale = ContentScale.Crop,
+
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .height(120.dp)

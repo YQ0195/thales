@@ -5,8 +5,11 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.*
@@ -16,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.thales.model.Product
 import com.example.thales.util.rememberImagePickerHandler
@@ -30,12 +34,14 @@ import java.io.File
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductCreationForm(
+    navController: NavController,
     viewModel: ProductViewModel,
     onProductCreated: () -> Unit,
-    productToEdit: Product? = null // nullable for create/edit mode
+    productToEdit: Product? = null
 ) {
     val coroutineScope = rememberCoroutineScope()
     val picker = rememberImagePickerHandler()
+    val scrollState = rememberScrollState()
 
     var name by remember { mutableStateOf(productToEdit?.name ?: "") }
     var type by remember { mutableStateOf(productToEdit?.type ?: "") }
@@ -59,10 +65,25 @@ fun ProductCreationForm(
 
     Column(
         modifier = Modifier
-            .padding(16.dp)
-            .fillMaxSize(),
+            .fillMaxSize()
+            .verticalScroll(scrollState)
+            .imePadding() // to avoid keyboard covering content
+            .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = { navController.popBackStack() }) {
+                Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = if (productToEdit != null) "Edit Product" else "Create Product",
+                style = MaterialTheme.typography.titleLarge
+            )
+        }
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -90,40 +111,31 @@ fun ProductCreationForm(
             AlertDialog(
                 onDismissRequest = { showImagePickerDialog = false },
                 confirmButton = {},
-                title = { Text("Select Image", style = MaterialTheme.typography.titleMedium) },
+                title = { Text("Select Image") },
                 text = {
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        Button(
-                            onClick = {
-                                showImagePickerDialog = false
-                                galleryLauncher.launch("image/*")
-                            },
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
+                        Button(onClick = {
+                            showImagePickerDialog = false
+                            galleryLauncher.launch("image/*")
+                        }) {
                             Icon(Icons.Default.Image, contentDescription = null)
                             Spacer(Modifier.width(8.dp))
                             Text("Gallery")
                         }
-
-                        Button(
-                            onClick = {
-                                showImagePickerDialog = false
-                                val uri = picker.createCameraUri()
-                                cameraLauncher.launch(uri)
-                            },
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
+                        Button(onClick = {
+                            showImagePickerDialog = false
+                            val uri = picker.createCameraUri()
+                            cameraLauncher.launch(uri)
+                        }) {
                             Icon(Icons.Default.CameraAlt, contentDescription = null)
                             Spacer(Modifier.width(8.dp))
                             Text("Camera")
                         }
                     }
-                },
-                shape = RoundedCornerShape(16.dp),
-                containerColor = MaterialTheme.colorScheme.surface
+                }
             )
         }
 
@@ -137,31 +149,21 @@ fun ProductCreationForm(
             label = { Text("Name") },
             modifier = Modifier.fillMaxWidth()
         )
+
         var expanded by remember { mutableStateOf(false) }
         val categoryOptions = listOf("Electronics", "Clothing", "Books", "Beauty", "Appliances", "Toys", "Groceries", "Sports", "Furnitures")
 
-        ExposedDropdownMenuBox(
-            expanded = expanded,
-            onExpandedChange = { expanded = !expanded }
-        ) {
+        ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
             OutlinedTextField(
                 value = type,
                 onValueChange = {},
                 readOnly = true,
                 isError = typeError,
                 label = { Text("Type") },
-                trailingIcon = {
-                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-                },
-                modifier = Modifier
-                    .menuAnchor()
-                    .fillMaxWidth()
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
+                modifier = Modifier.menuAnchor().fillMaxWidth()
             )
-
-            ExposedDropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false }
-            ) {
+            ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                 categoryOptions.forEach { option ->
                     DropdownMenuItem(
                         text = { Text(option) },
@@ -175,7 +177,6 @@ fun ProductCreationForm(
             }
         }
 
-
         OutlinedTextField(
             value = price,
             onValueChange = {
@@ -186,6 +187,7 @@ fun ProductCreationForm(
             label = { Text("Price") },
             modifier = Modifier.fillMaxWidth()
         )
+
         OutlinedTextField(
             value = description,
             onValueChange = {
@@ -214,7 +216,6 @@ fun ProductCreationForm(
                 if (validName && validType && validPrice && validDesc && validImage) {
                     coroutineScope.launch {
                         if (productToEdit != null && picker.imageUri == null) {
-                            // No image change, use existing product for update
                             val updatedProduct = productToEdit.copy(
                                 name = name,
                                 type = type,
@@ -225,9 +226,7 @@ fun ProductCreationForm(
                         } else {
                             val file = picker.uriToTempFile() ?: return@launch
                             val imagePart = MultipartBody.Part.createFormData(
-                                "image",
-                                file.name,
-                                file.asRequestBody("image/*".toMediaTypeOrNull())
+                                "image", file.name, file.asRequestBody("image/*".toMediaTypeOrNull())
                             )
                             val namePart = name.toRequestBody("text/plain".toMediaTypeOrNull())
                             val typePart = type.toRequestBody("text/plain".toMediaTypeOrNull())
@@ -239,9 +238,7 @@ fun ProductCreationForm(
                                     productToEdit.id, namePart, typePart, pricePart, descPart, imagePart
                                 )
                             } else {
-                                viewModel.createProductMultipart(
-                                    namePart, typePart, pricePart, descPart, imagePart
-                                )
+                                viewModel.createProductMultipart(namePart, typePart, pricePart, descPart, imagePart)
                             }
                         }
                         onProductCreated()

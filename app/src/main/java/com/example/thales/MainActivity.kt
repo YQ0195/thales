@@ -57,6 +57,7 @@ class MainActivity : ComponentActivity() {
 
                         composable("createProduct") {
                             ProductCreationForm(
+                                navController = navController,
                                 viewModel = viewModel,
                                 onProductCreated = { navController.popBackStack() }
                             )
@@ -69,6 +70,7 @@ class MainActivity : ComponentActivity() {
 
                             when {
                                 product != null -> ProductDetailScreen(
+                                    navController = navController,
                                     product = product,
                                     onEditClick = {
                                         navController.navigate("editProduct/${product.id}")
@@ -95,6 +97,7 @@ class MainActivity : ComponentActivity() {
 
                             product?.let {
                                 ProductCreationForm(
+                                    navController = navController,
                                     viewModel = viewModel,
                                     productToEdit = it,
                                     onProductCreated = {
