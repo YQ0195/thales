@@ -36,7 +36,6 @@ class MainActivity : ComponentActivity() {
                 Scaffold(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(WindowInsets.safeDrawing.asPaddingValues())
                 ) { innerPadding ->
 
                     NavHost(
@@ -68,9 +67,6 @@ class MainActivity : ComponentActivity() {
                             val products by viewModel.products.collectAsStateWithLifecycle()
                             val product = products.find { it.id == productId }
 
-                            Log.d("ayo", "productId = $productId, products size = ${products.size}")
-                            Log.d("ayo2", products.toString())
-
                             when {
                                 product != null -> ProductDetailScreen(
                                     product = product,
@@ -100,7 +96,7 @@ class MainActivity : ComponentActivity() {
                             product?.let {
                                 ProductCreationForm(
                                     viewModel = viewModel,
-                                    productToEdit = it, // ✅ Pass product for prefill
+                                    productToEdit = it,
                                     onProductCreated = {
                                         navController.popBackStack()
                                     }

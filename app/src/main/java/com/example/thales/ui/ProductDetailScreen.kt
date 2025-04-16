@@ -10,6 +10,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.thales.model.Product
@@ -28,35 +30,46 @@ fun ProductDetailScreen(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        // Header row with three-dots menu
+        var iconButtonCoordinates by remember { mutableStateOf<androidx.compose.ui.geometry.Rect?>(null) }
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.End
         ) {
-            IconButton(onClick = { showMenu = true }) {
-                Icon(Icons.Default.MoreVert, contentDescription = "More")
-            }
+            Box {
+                IconButton(
+                    onClick = { showMenu = true },
+                    modifier = Modifier
+                        .onGloballyPositioned { coordinates ->
+                            iconButtonCoordinates = coordinates.boundsInWindow()
+                        }
+                ) {
+                    Icon(Icons.Default.MoreVert, contentDescription = "More")
+                }
 
-            DropdownMenu(
-                expanded = showMenu,
-                onDismissRequest = { showMenu = false }
-            ) {
-                DropdownMenuItem(
-                    text = { Text("Edit") },
-                    onClick = {
-                        showMenu = false
-                        onEditClick(product)
-                    }
-                )
-                DropdownMenuItem(
-                    text = { Text("Delete") },
-                    onClick = {
-                        showMenu = false
-                        showDeleteDialog = true
-                    }
-                )
+                DropdownMenu(
+                    expanded = showMenu,
+                    onDismissRequest = { showMenu = false },
+                    modifier = Modifier
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Edit") },
+                        onClick = {
+                            showMenu = false
+                            onEditClick(product)
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Delete") },
+                        onClick = {
+                            showMenu = false
+                            showDeleteDialog = true
+                        }
+                    )
+                }
             }
         }
+
 
         // Image with rounded corners and shadow
         AsyncImage(

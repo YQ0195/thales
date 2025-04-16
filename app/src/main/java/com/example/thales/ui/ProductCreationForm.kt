@@ -236,7 +236,11 @@ fun ProductCreationForm(
 
                             if (productToEdit != null) {
                                 viewModel.updateProductWithMultipartImage(
-                                    productToEdit.id,namePart, typePart, pricePart, descPart, imagePart
+                                    productToEdit.id, namePart, typePart, pricePart, descPart, imagePart
+                                )
+                            } else {
+                                viewModel.createProductMultipart(
+                                    namePart, typePart, pricePart, descPart, imagePart
                                 )
                             }
                         }

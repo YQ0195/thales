@@ -40,14 +40,6 @@ fun ProductListScreen(
     }
 
     Scaffold(
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onCreateClick,
-                modifier = Modifier.offset(y = (-32).dp)
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Create Product")
-            }
-        }
 
     ) {
         Column(
@@ -150,23 +142,53 @@ fun ProductListScreen(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp)
+                            .offset(y = (-32).dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        FloatingActionButton(onClick = onCreateClick,
+                                             modifier = Modifier.size(72.dp)
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = "Create Product",
+                                modifier = Modifier.size(36.dp)
+                            )
+
+                        }
+                    }
+
                 Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Button(
                         onClick = { viewModel.previousPage() },
-                        enabled = currentPage > 1
-                    ) { Text("Previous") }
+                        enabled = currentPage > 1,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Previous")
+                    }
 
-                    Text("Page $currentPage")
+                    Box(
+                        modifier = Modifier.weight(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("Page $currentPage")
+                    }
 
                     Button(
                         onClick = { viewModel.nextPage() },
-                        enabled = products.size == 6
-                    ) { Text("Next") }
+                        enabled = products.size == 6,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Next")
+                    }
                 }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
             }
         }
     }
