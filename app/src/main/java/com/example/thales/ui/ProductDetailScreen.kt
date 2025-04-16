@@ -88,21 +88,20 @@ fun ProductDetailScreen(
 
 
 
-        // Image with rounded corners and shadow
         AsyncImage(
             model = "http://10.0.2.2:8080" + product.picture_url,
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(240.dp)
+                .aspectRatio(1f)
                 .clip(MaterialTheme.shapes.medium)
                 .shadow(4.dp)
         )
 
+
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Product content section
         Column(
             modifier = Modifier
                 .fillMaxWidth()

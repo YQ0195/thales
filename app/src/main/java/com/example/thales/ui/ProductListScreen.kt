@@ -34,7 +34,7 @@ fun ProductListScreen(
     val selectedType by viewModel.selectedType.collectAsStateWithLifecycle()
 
     var typeMenuExpanded by remember { mutableStateOf(false) }
-    val categoryOptions = listOf("All", "Electronics", "Clothing", "Books", "Beauty", "Home", "Toys", "Groceries", "Sports", "Automotive")
+    val categoryOptions = listOf("All", "Electronics", "Clothing", "Books", "Beauty", "Appliances", "Toys", "Groceries", "Sports", "Furnitures")
 
     LaunchedEffect(Unit) {
         viewModel.fetchProducts()
@@ -124,7 +124,7 @@ fun ProductListScreen(
 
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .height(120.dp)
+                                        .height(130.dp)
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
