@@ -1,3 +1,14 @@
 <resources>
     <string name="app_name">thales</string>
+    <string-array name="product_types">
+        <item>Electronics</item>
+        <item>Clothing</item>
+        <item>Books</item>
+        <item>Beauty</item>
+        <item>Appliances</item>
+        <item>Toys</item>
+        <item>Groceries</item>
+        <item>Sports</item>
+        <item>Furnitures</item>
+    </string-array>
 </resources>
